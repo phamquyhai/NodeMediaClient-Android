@@ -43,6 +43,7 @@ public class NodeCameraView extends FrameLayout implements GLSurfaceView.Rendere
     private Camera mCamera;
     private int mTextureId = -1;
 
+    private boolean mUpdateST = false;
     private boolean isStarting;
     private boolean isAutoFocus = true;
     private int mCameraId = 0;
@@ -92,6 +93,7 @@ public class NodeCameraView extends FrameLayout implements GLSurfaceView.Rendere
     private void destroyTexture() {
         if (mTextureId > NO_TEXTURE) {
             Log.d(TAG, "GL destroyTexture");
+            mUpdateST = false;
             mTextureId = NO_TEXTURE;
             mSurfaceTexture.setOnFrameAvailableListener(null);
             mSurfaceTexture.release();
@@ -135,6 +137,7 @@ public class NodeCameraView extends FrameLayout implements GLSurfaceView.Rendere
     public int stopPreview() {
         if (!isStarting) return -1;
         isStarting = false;
+        mUpdateST = false;
         mGLSurfaceView.queueEvent(new Runnable() {
             @Override
             public void run() {
@@ -321,6 +324,12 @@ public class NodeCameraView extends FrameLayout implements GLSurfaceView.Rendere
 
     @Override
     public void onDrawFrame(GL10 gl) {
+         synchronized(this) {
+            if ( mUpdateST ) {
+                mSTexture.updateTexImage();
+                mUpdateST = false;
+            }
+        }
         mSurfaceTexture.updateTexImage();
         if (mNodeCameraViewCallback != null) {
             mNodeCameraViewCallback.OnDraw(mTextureId);
@@ -372,8 +381,9 @@ public class NodeCameraView extends FrameLayout implements GLSurfaceView.Rendere
     }
 
     @Override
-    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+    public synchronized void onFrameAvailable(SurfaceTexture surfaceTexture) {
         if (mGLSurfaceView != null) {
+            mUpdateST = true;
             mGLSurfaceView.requestRender();
         }
 
