@@ -326,11 +326,10 @@ public class NodeCameraView extends FrameLayout implements GLSurfaceView.Rendere
     public void onDrawFrame(GL10 gl) {
          synchronized(this) {
             if ( mUpdateST ) {
-                mSTexture.updateTexImage();
+                mSurfaceTexture.updateTexImage();
                 mUpdateST = false;
             }
         }
-        mSurfaceTexture.updateTexImage();
         if (mNodeCameraViewCallback != null) {
             mNodeCameraViewCallback.OnDraw(mTextureId);
         }
